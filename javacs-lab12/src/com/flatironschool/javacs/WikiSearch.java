@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.Set;
 
 import redis.clients.jedis.Jedis;
 
@@ -60,10 +62,28 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch or(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+		// FILL THIS IN!
+		WikiSearch orSearch;
+		Map<String, Integer> orMap = new HashMap<String, Integer>();
+		orMap.putAll(map);
+		orMap.putAll(that.map);
+		
+		//need to go back and edit the value for the keys that were duplicates
+		Set<String> thisKeys = map.keySet();
+		Set<String> thatKeys = that.map.keySet();
+		for (String key : thisKeys){
+			if (thatKeys.contains(key)){
+				Integer update = orMap.get(key);
+				update += map.get(key);
+				orMap.put(key, update);
+			}
+		}
+
+        orSearch = new WikiSearch(orMap);
+		return orSearch;
 	}
-	
+
+
 	/**
 	 * Computes the intersection of two search results.
 	 * 
@@ -72,7 +92,20 @@ public class WikiSearch {
 	 */
 	public WikiSearch and(WikiSearch that) {
         // FILL THIS IN!
-		return null;
+		WikiSearch andSearch;
+		Map<String, Integer> andMap = new HashMap<String, Integer>();
+		
+		Set<String> thisKeys = map.keySet();
+		Set<String> thatKeys = that.map.keySet();
+		for (String key : thisKeys){
+			if (thatKeys.contains(key)){
+				Integer sum = that.map.get(key) + map.get(key);
+				andMap.put(key, sum);
+			}
+		}
+
+        andSearch = new WikiSearch(andMap);
+		return andSearch;
 	}
 	
 	/**
@@ -83,7 +116,21 @@ public class WikiSearch {
 	 */
 	public WikiSearch minus(WikiSearch that) {
         // FILL THIS IN!
-		return null;
+		WikiSearch minusSearch;
+		Map<String, Integer> minusMap = new HashMap<String, Integer>();
+		minusMap.putAll(map);
+
+		Set<String> thisKeys = map.keySet();
+		Set<String> thatKeys = that.map.keySet();
+
+		for (String key : thisKeys){
+			if (thatKeys.contains(key)){
+				minusMap.remove(key);
+			}
+		}
+
+        minusSearch = new WikiSearch(minusMap);
+		return minusSearch;
 	}
 	
 	/**
@@ -105,8 +152,30 @@ public class WikiSearch {
 	 */
 	public List<Entry<String, Integer>> sort() {
         // FILL THIS IN!
-		return null;
+        Set<Entry<String, Integer>> entries = map.entrySet();
+        List<Entry<String, Integer>> unsortedEntries = new ArrayList<Entry<String, Integer>>(entries);
+
+        Comparator<Entry<String, Integer>> comparator = new Comparator<Entry<String, Integer>>() {
+            @Override
+            public int compare(Entry<String, Integer> entry1, Entry<String, Integer> entry2) {
+            	if (entry1.getValue() < entry2.getValue()) {
+                    return -1;
+                }
+                if (entry1.getValue() > entry2.getValue()) {
+                    return 1;
+                }
+               
+                return 0;
+            }
+        };
+
+
+        Collections.sort(unsortedEntries, comparator);
+
+		return unsortedEntries;
 	}
+
+
 
 	/**
 	 * Performs a search and makes a WikiSearch object.
